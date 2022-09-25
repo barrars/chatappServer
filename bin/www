@@ -1,0 +1,88 @@
+#!/usr/bin/env node
+/* eslint-disable no-fallthrough */
+
+// const { Server } = require('socket.io')
+const app = require('../app')
+// const app = require('../app').app
+const debug = require('debug')('chatappserver:server')
+const { createServer } = require('http')
+const socketAPI = require('../sockets/socketAPI')
+const logger = require('../routes/myLogger')
+const port = normalizePort(process.env.PORT || '3001')
+app.set('port', port)
+
+const httpServer = createServer(app)
+
+// const server = require('../app').server
+httpServer.listen(port)
+socketAPI(httpServer)
+// socketAPI.io.(httpServer)
+httpServer.on('error', onError)
+httpServer.on('listening', onListening)
+
+// const io = new Server(server, {
+//   cors: {
+//     origin: 'http://localhost:3000',
+//     methods: ['GET', 'POST']
+//   }
+// })
+// io.on('connection', (socket) => {
+//   console.log('a user connected')
+//   socket.on('disconnect', () => {
+//     console.log('user disconnected')
+//   })
+// })
+
+function normalizePort (val) {
+  const port = parseInt(val, 10)
+
+  if (isNaN(port)) {
+    // named pipe
+    return val
+  }
+
+  if (port >= 0) {
+    // port number
+    return port
+  }
+
+  return false
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError (error) {
+  if (error.syscall !== 'listen') {
+    throw error
+  }
+
+  const bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      logger.error(bind + ' requires elevated privileges')
+      process.exit(1)
+    case 'EADDRINUSE':
+      logger.error(bind + ' is already in use')
+      process.exit(1)
+    default:
+      throw error
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening () {
+  const addr = httpServer.address()
+  const bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port
+  debug('Listening on ' + bind)
+}
