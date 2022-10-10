@@ -26,21 +26,23 @@ const Song = module.exports = mongoose.model('songs', songSchema)
 fs.readdir(path.join(__dirname, '../public/downloads'))
   .then(files => {
     files.forEach(file => {
-      Song.find({ fileName: file }, (err, doc) => {
-        if (err) {
-          throw err
-        }
-        if (!doc.length) {
+      if (file !== '.gitignore') {
+        Song.find({ fileName: file }, (err, doc) => {
+          if (err) {
+            throw err
+          }
+          if (!doc.length) {
           // logger.log(doc.length)
           // logger.log('creating')
-          fs.stat(path.join(__dirname, '../public/downloads', file))
-            .then(data => {
+            fs.stat(path.join(__dirname, '../public/downloads', file))
+              .then(data => {
               // logger.log(data.ctimeMs)
               // logger.log(file)
-              Song.create({ title: file, fileName: file, downloaded: data.ctimeMs })
-            })
-        }
-      })
+                Song.create({ title: file, fileName: file, downloaded: data.ctimeMs })
+              })
+          }
+        })
+      }
     })
   })
 

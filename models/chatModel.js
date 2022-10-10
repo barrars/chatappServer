@@ -5,7 +5,7 @@ const Schema = mongoose.Schema
 const chatSchema = new Schema({
   message: { type: String },
   name: { type: String },
-  color: { type: String },
+  color: { type: String, default: '#e21400' },
   timestamp: { type: Date, default: Date.now }
 })
 const Chats = module.exports = mongoose.model('chat', chatSchema)
@@ -15,7 +15,7 @@ async function create (chat) {
   if (!newChat.save()) {
     throw new Error()
   }
-  // return newChat
+  return newChat
 }
 
 Chats.create = create
