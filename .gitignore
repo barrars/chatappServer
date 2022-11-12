@@ -24,3 +24,5 @@ yarn-error.log*
 
 notes
 .env
+pac
+.vscode/settings.json
