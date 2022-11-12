@@ -26,3 +26,5 @@ notes
 .env
 pac
 .vscode/settings.json
+youtube-dl
+yt-dlp

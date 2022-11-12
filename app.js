@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser')
 const logger = require('morgan')
 const chatList = require('./routes/chatList')
 const songList = require('./routes/songList')
+const ytsearch = require('./routes/ytsearch')
 // const socketRoutes = require('./sockets/socket')
 const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/users')
@@ -38,6 +39,7 @@ app.use('/', indexRouter)
 app.use('/users', usersRouter)
 app.use('/chatList', chatList)
 app.use('/songList', songList)
+app.use('/ytsearch', ytsearch)
 
 // module.exports = app
 
