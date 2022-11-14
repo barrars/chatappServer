@@ -1,55 +1,56 @@
 
-const { Server } = require('socket.io')
 const logger = require('../routes/myLogger')
 const Chats = require('../models/chatModel')
-module.exports = function (httpServer) {
-  const io = new Server(httpServer, {
-    cors: {
-      origins: ['localhost:3000']
-    }
-  })
 
-  io.on('connection', (socket) => {
-    logger.log('a user connected')
-    logger.log(socket.handshake.query)
-    // log all connected sockets
-    // logger.log(io.sockets.sockets)
-    // logger.log(Object.keys(io.sockets.sockets))
-    // logger.log(Array.from(io.sockets.sockets))
-    io.sockets.sockets.forEach((socket) => {
-      logger.log('1', socket.handshake.query, socket.id)
-      // logger.log('2', io.sockets.eventNames())
-      // logger.log('3', io.sockets.adapter.rooms)
-      // logger.log('3', socket.conn.)
-    })
-    // logger.log(Object.keys(io.engine.))
+let io
 
-    // io.emit('allSocketId', io.sockets.clients().connected)
-    socket.on('disconnect', () => {
-      logger.log('user disconnected')
+module.exports = {
+  init: (server) => {
+    io = require('socket.io')(server, {
+      cors: {
+        origins: [
+          'http://localhost:3000'
+        ],
+        methods: ['GET', 'POST']
+      }
     })
-    socket.on('join', (data) => {
-      logger.log(data)
+    io.on('connection', async function (socket) {
+      console.log(
+        'socket ' +
+        socket.id +
+        ' Connected from ' +
+        socket.conn.remoteAddress
+      )
+      socket.on('chat', (message) => {
+        logger.log('message: ' + message)
+        logger.log(socket.handshake.query.name)
+        const name = socket.handshake.query.name
+        Chats.create({ message, name })
+          .then((doc) => {
+            logger.log(doc)
+            // io.emit('chat', doc)
+            io.emit('chat message', { message, name })
+          })
+      })
+      socket.on('disconnect', () => {
+        console.log('user disconnected!!!!!!!!!!!!!!!!!!!!!!11')
+      })
     })
+  },
+  on: (event, callback) => {
+    io.on(event, callback)
+  },
 
-    socket.on('bish', (msg) => {
-      logger.log('clack: ' + msg)
-      logger.log(socket.handshake.query.name)
-    })
-    socket.on('chat', (message) => {
-      logger.log('message: ' + message)
-      logger.log(socket.handshake.query.name)
-      const name = socket.handshake.query.name
-      Chats.create({ message, name })
-        .then((doc) => {
-          logger.log(doc)
-          // io.emit('chat', doc)
-          io.emit('chat message', { message, name })
-        })
-    })
-    socket.on('ping', () => {
-      logger.log('ping')
-      socket.emit('pong')
-    })
-  })
+  emitEventTo: (socketId, event, data) => {
+    const ns = io.of('/')
+    const my_socket = ns.connected[socketId]
+    if (!my_socket) return `Socket not found ${socketId}`
+    my_socket.emit(event, data)
+  },
+  emit: (event, data) => {
+    if (!io) return
+    io.emit(event, data)
+  },
+  io: () => io
+
 }

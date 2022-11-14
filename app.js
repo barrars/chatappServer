@@ -11,10 +11,10 @@ const ytsearch = require('./routes/ytsearch')
 const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/users')
 const cors = require('cors')
-const { createServer } = require('http')
-const httpServer = createServer()
+// const { createServer } = require('http')
+// const httpServer = createServer()
 const app = express()
-const { Server } = require('socket.io')
+// const { Server } = require('socket.io')
 // const server = require('http').Server(app)
 
 // const io = new Server(httpServer, {
@@ -39,7 +39,7 @@ app.use('/', indexRouter)
 app.use('/users', usersRouter)
 app.use('/chatList', chatList)
 app.use('/songList', songList)
-app.use('/ytsearch', ytsearch)
+app.use('/search', ytsearch)
 
 // module.exports = app
 
