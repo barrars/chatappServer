@@ -7,22 +7,10 @@ const logger = require('morgan')
 const chatList = require('./routes/chatList')
 const songList = require('./routes/songList')
 const ytsearch = require('./routes/ytsearch')
-// const socketRoutes = require('./sockets/socket')
 const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/users')
 const cors = require('cors')
-// const { createServer } = require('http')
-// const httpServer = createServer()
 const app = express()
-// const { Server } = require('socket.io')
-// const server = require('http').Server(app)
-
-// const io = new Server(httpServer, {
-//   cors: {
-//     origins: ['localhost:3000']
-//   }
-// })
-// io.on('connection', socketRoutes)
 
 app.use(logger('dev'))
 app.use(cors())
