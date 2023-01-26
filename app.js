@@ -14,10 +14,10 @@ const app = express()
 
 app.use(logger('dev'))
 app.use(cors())
-app.use(function (req, res, next) {
-  // res.io = io
-  next()
-})
+// app.use(function (req, res, next) {
+// res.io = io
+// next()
+// })
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
@@ -28,7 +28,5 @@ app.use('/users', usersRouter)
 app.use('/chatList', chatList)
 app.use('/songList', songList)
 app.use('/search', ytsearch)
-
-// module.exports = app
 
 module.exports = app

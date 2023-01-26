@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable n/no-callback-literal */
 /* eslint-disable no-fallthrough */
 
 const app = require('../app')
@@ -6,36 +7,28 @@ const debug = require('debug')('chatappserver:server')
 const { createServer } = require('http')
 const logger = require('../routes/myLogger')
 const { default: YTDlpWrap } = require('yt-dlp-wrap-extended')
-// const { onConnect } = require('../sockets/oldsocketAPI')
-// const socket = require('../sockets/socket')
-const socketAPI = require('../sockets/socketAPI')
-// const socketAPI = require('../sockets/socketAPI')
+const { Server } = require('socket.io')
+const { onConnect } = require('../sockets/oldsocketAPI')
 
 const port = normalizePort(process.env.PORT || '3001')
 app.set('port', port)
 YTDlpWrap.downloadFromGithub()
-
 const httpServer = createServer(app)
+const corsOptions = {
+  origin: [process.env.FRONTEND_HOST],
+  credentials: true,
+  maxAge: 86400
+}
+const io = new Server(httpServer, { cors: corsOptions })
+app.set('io', io)
 
-socketAPI.init(httpServer)
-// socket(httpServer)
+io.on('connect', socket => {
+  onConnect(io, socket)
+})
 
-// const io = new Server(httpServer, {
-//   cors: {
-//     origins: ['localhost:3000']
-//   }
-// })
-
-// io.on('new_namespace', (namespace) => {
-//   logger.log({ namespace })
-// })
-// io.on('connection', socket => {
-//   onConnect(io, socket)
-// })
-// io.of(/^\/dynamic-\d+$/).on('connection', (socket) => {
-//   const namespace = socket.nsp
-//   logger.log({ namespace })
-// })
+io.on('join', socket => {
+  logger.log('join', socket)
+})
 
 httpServer.listen(port)
 httpServer.on('error', onError)
