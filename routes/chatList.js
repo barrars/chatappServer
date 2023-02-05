@@ -1,5 +1,4 @@
 // router for /chatList
-// const logger = require('./myLogger')
 // logger.trace(new Date())
 const Chat = require('../models/chatModel')
 const express = require('express')
@@ -36,8 +35,9 @@ router.post('/', async function (req, res) {
   logger.log(chat)
   const newChat = new Chat(chat)
   if (newChat.save()) {
-    res.json(newChat)
-    io.emit('chat message', newChat)
+    res.json({ msg: chat, status: 'saved' })
+    // io.emit('chat message', newChat)
+    io.to(chat.chatRoom).emit('chat message', newChat)
   } else {
     res.json({ err: 'something isnt right' })
   }

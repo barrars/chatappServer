@@ -85,12 +85,9 @@ router.post('/', function (req, res, next) {
               .then(song => {
                 logger.log(song)
                 io.emit('song', { song })
-                // socket('song', { song, status })
               })
           })
       }
-      // socket('song', { songTitle, status })
-      // res.json({ title: songTitle, status })
       logger.log('all done', e)
       res.send({ title: songTitle, status })
     })
