@@ -1,3 +1,4 @@
+const Socket = require('../models/sockets')
 const logger = require('../routes/myLogger')
 // const Chats = require('../models/chatModel')
 // let io
@@ -6,17 +7,27 @@ const logger = require('../routes/myLogger')
 module.exports =
 {
   onConnect: async (io, socket) => {
-    socket.join('main')
-
     logger.log('socket ' + socket.id + ' Connected from ' + socket.conn.remoteAddress)
+    socket.join('main')
+    const allSockets = await io.in('main').allSockets()
+    logger.log({ allSockets })
+
     // socket.emit('message', 'Welcome to the chat')
     socket.on('join', username => {
     // list all namespaces
       // logger.log(io.nsps)
+      Socket.create({ socketID: socket.id, username })
       socket.username = username
       logger.log('join', username)
+      logger.log('socket username', socket.username)
+      logger.log('socket id', socket.id)
     })
     socket.onAny((event, ...args) => {
+      args[args.length - 1]({
+        event,
+        msg: ' onany acknowledgement'
+      })
+      logger.log(args.length)
       logger.log(event, args)
     })
     socket.on('join-room', (room, ack) => {

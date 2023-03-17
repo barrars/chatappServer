@@ -26,10 +26,6 @@ io.on('connect', socket => {
   onConnect(io, socket)
 })
 
-// io.on('join', socket => {
-//   logger.log('join', socket)
-// })
-
 httpServer.listen(port)
 httpServer.on('error', onError)
 httpServer.on('listening', onListening)
