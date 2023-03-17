@@ -5,5 +5,5 @@ const router = express.Router()
 router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' })
 })
-
+// socketAPI.io().emit('chat message', { message: 'hi', name: 'dave' })
 module.exports = router

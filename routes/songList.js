@@ -10,7 +10,7 @@ router.get('/', async function (req, res, next) {
   if (songList) {
     res.json(songList)
   } else {
-    res.json({ err: 'something isnt right' })
+    res.json({ err: 'something with songList.js isnt right' })
   }
 })
 
