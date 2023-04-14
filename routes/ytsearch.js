@@ -5,10 +5,10 @@ const ytDlpWrap = new YTDlpWrap(path.join(__dirname, '../yt-dlp'))
 const audioDir = path.join(__dirname, '../public/downloads/%(title)s.%(ext)s')
 const express = require('express')
 const logger = require('./myLogger')
-// const { socket } = require('../sockets/socketAPI')
 const fs = require('fs-extra')
 const Song = require('../models/songs')
 const router = express.Router()
+const socketSingleton = require('../sockets/socketSingleton')
 
 router.post('/test', function (req, res, next) {
   const str = req.query.q
@@ -40,7 +40,7 @@ router.post('/', function (req, res, next) {
     ])
 
     .on('progress', (progress) => {
-      io.emit('eta', progress)
+      socketSingleton().io.emit('eta', progress)
       logger.log(
         progress.percent,
         progress.totalSize,
@@ -84,7 +84,7 @@ router.post('/', function (req, res, next) {
             Song.create({ createdBy: username, title: songTitle, fileName: songTitle, downloaded: data.ctimeMs })
               .then(song => {
                 logger.log(song)
-                io.emit('song', { song })
+                socketSingleton().io.emit('song', { song })
               })
           })
       }
