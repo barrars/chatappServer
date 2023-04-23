@@ -1,5 +1,6 @@
 // roomHandler.js
 
+const logger = require('../myLogger')
 const socketSingleton = require('./socketSingleton')
 
 // const socketSingleton = require('./socket')
@@ -9,7 +10,7 @@ function showRooms () {
 
   // Iterate over the rooms and sockets
   for (const [room, sockets] of rooms.entries()) {
-    console.log(`Room: ${room}, Sockets: ${sockets.join(', ')}`)
+    logger.log(`Room: ${room}, Sockets: ${sockets.join(', ')}`)
   }
 }
 

@@ -2,9 +2,9 @@
 // const { showRooms } = require('../sockets/roomHandler')
 const Chat = require('../models/chatModel')
 const express = require('express')
-const logger = require('./myLogger')
 const router = express.Router()
 const socketSingleton = require('../sockets/socketSingleton')
+const logger = require('../myLogger')
 router.get('/', async function (req, res) {
   // logger.log('hit songList API route ')
   const chatList = await Chat.find({})

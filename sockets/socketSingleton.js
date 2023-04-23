@@ -1,14 +1,16 @@
 // socket.js
 
 const { Server } = require('socket.io')
+const logger = require('../myLogger')
 
 class SocketSingleton {
   constructor (server) {
     if (!SocketSingleton.instance) {
-      console.log('Creating a new instance of SocketSingleton')
+      logger
+        .log('Creating a new instance of SocketSingleton')
       const opts = {
         cors: {
-          origin: [process.env.FRONTEND_HOST],
+          origin: [process.env.FRONTEND_HOST, process.env.VITE_FRONTEND_HOST],
           credentials: true,
           maxAge: 86400
 

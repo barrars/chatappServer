@@ -2,11 +2,11 @@
 
 const songs = require('../models/songs')
 const express = require('express')
-const logger = require('./myLogger')
+const logger = require('../myLogger')
 const router = express.Router()
 router.get('/', async function (req, res, next) {
   logger.log('hit songList API route ')
-  const songList = await songs.find({})
+  const songList = await songs.find({ deleted: false })
   if (songList) {
     res.json(songList)
   } else {

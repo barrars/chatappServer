@@ -1,5 +1,5 @@
 const Socket = require('../models/sockets')
-const logger = require('../routes/myLogger')
+const logger = require('../myLogger')
 // const Chats = require('../models/chatModel')
 // let io
 // let socket

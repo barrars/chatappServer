@@ -4,11 +4,12 @@ const path = require('path')
 const ytDlpWrap = new YTDlpWrap(path.join(__dirname, '../yt-dlp'))
 const audioDir = path.join(__dirname, '../public/downloads/%(title)s.%(ext)s')
 const express = require('express')
-const logger = require('./myLogger')
+// const logger = require('./myLogger')
 const fs = require('fs-extra')
 const Song = require('../models/songs')
 const router = express.Router()
 const socketSingleton = require('../sockets/socketSingleton')
+const logger = require('../myLogger')
 
 router.post('/test', function (req, res, next) {
   const str = req.query.q
