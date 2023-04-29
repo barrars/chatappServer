@@ -6,59 +6,57 @@ const path = require('path')
 // const logger = require('../routes/myLogger')
 // logger.log(new Date())
 
-const songSchema = new Schema({
-  title: { type: String, required: true },
-  fileName: { type: String, required: true },
-  artist: { type: String },
-  youtubeUrl: { type: String },
-  thumbnailUrl: { type: String },
-  plays: { type: Number, default: 0 },
-  fileSlug: { type: String, required: true, unique: true },
-  createdBy: { type: String, required: true, default: 'rambo' },
-  lastPlayed: { type: Date, default: Date.now },
-  downloaded: { type: Date, default: Date.now },
-  deleted: { type: Boolean, default: false }
+const roomSchema = new Schema({
+  name: { type: String, required: true },
+  sockets: [{ type: String }],
+  messages: [{
+    message: { type: String },
+    username: { type: String },
+    color: { type: String, default: '#e21400' },
+    timestamp: { type: Date, default: Date.now },
+    chatRoom: { type: String }
+  }]
 
 })
 
-const Song = module.exports = mongoose.model('songs', songSchema)
+const Room = module.exports = mongoose.model('rooms', roomSchema)
 
-fs.readdir(path.join(__dirname, '../public/downloads'))
-  .then(files => {
-    files.forEach(file => {
-      if (file !== '.gitignore') {
-        Song.find({ fileName: file }, (err, doc) => {
-          if (err) {
-            throw err
-          }
-          if (!doc.length) {
-          // logger.log(doc.length)
-          // logger.log('creating')
-            fs.stat(path.join(__dirname, '../public/downloads', file))
-              .then(data => {
-              // logger.log(data.ctimeMs)
-              // logger.log(file)
-                Song.create({ title: file, fileName: file, downloaded: data.ctimeMs })
-              })
-          }
-        })
-      }
-    })
-  })
+// fs.readdir(path.join(__dirname, '../public/downloads'))
+//   .then(files => {
+//     files.forEach(file => {
+//       if (file !== '.gitignore') {
+//         Song.find({ fileName: file }, (err, doc) => {
+//           if (err) {
+//             throw err
+//           }
+//           if (!doc.length) {
+//           // logger.log(doc.length)
+//           // logger.log('creating')
+//             fs.stat(path.join(__dirname, '../public/downloads', file))
+//               .then(data => {
+//               // logger.log(data.ctimeMs)
+//               // logger.log(file)
+//                 Song.create({ title: file, fileName: file, downloaded: data.ctimeMs })
+//               })
+//           }
+//         })
+//       }
+//     })
+//   })
 
-Song.create = create
+// Song.create = create
 
-async function create (song) {
-  const newSong = await new Song(addFileSlug(song))
+// async function create (song) {
+//   const newSong = await new Song(addFileSlug(song))
 
-  if (!newSong.save()) {
-    throw Error('Error saving playlist')
-  }
-  return newSong
-}
+//   if (!newSong.save()) {
+//     throw Error('Error saving playlist')
+//   }
+//   return newSong
+// }
 
-function addFileSlug (song) {
-  song.fileSlug = uuidv4()
+// function addFileSlug (song) {
+//   song.fileSlug = uuidv4()
 
-  return song
-}
+//   return song
+// }

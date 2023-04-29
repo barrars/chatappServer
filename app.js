@@ -10,6 +10,7 @@ const ytsearch = require('./routes/ytsearch')
 const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/users')
 const cors = require('cors')
+const socketSingleton = require('./sockets/socketSingleton.js')
 const app = express()
 
 app.use(logger('dev'))
@@ -22,7 +23,10 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
-
+app.use((req, res, next) => {
+  req.socketSingleton = socketSingleton
+  next()
+})
 app.use('/', indexRouter)
 app.use('/users', usersRouter)
 app.use('/chatList', chatList)

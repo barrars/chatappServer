@@ -3,6 +3,8 @@ const mongoose = require('mongoose')
 const logger = require('../myLogger')
 const dbURI = process.env.MONGO_URL
 
+mongoose.set('strictQuery', true)
+
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .catch(error => {
     logger.log(error.message)
