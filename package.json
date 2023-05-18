@@ -6,6 +6,7 @@
     "start": "npx nodemon ./bin/www --trace-warnings --trace-deprecation"
   },
   "dependencies": {
+    "chokidar": "^3.5.3",
     "colors": "^1.4.0",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",

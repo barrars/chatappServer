@@ -14,7 +14,9 @@ class SocketSingleton {
           credentials: true,
           maxAge: 86400
 
-        }
+        },
+        reconnect: true
+
       }
       // list namespaces
 
@@ -31,20 +33,26 @@ class SocketSingleton {
     // Set up namespaces and rooms
     this.io.on('connection', (socket) => {
       logger.log('A user connected')
-      // emit 'Welcome' event to the client
-      socket.emit('welcome', 'Welcome to the chat server')
 
       socket.on('join', (room, cb) => {
+        let count
+        if (!room) return
         socket.join(room)
         logger.log(`User joined room: ${room}`)
         // Update the rooms map
-        if (this.rooms.has(room)) {
+        if (this.rooms.has(room) && !this.rooms.get(room).includes(socket.id)) {
+          // If the room exists, add the socket id to the array if it's not already there
           this.rooms.get(room).push(socket.id)
+          count = this.rooms.get(room).length
         } else {
+          // If the room doesn't exist, create it and add the socket id to the set
           this.rooms.set(room, [socket.id])
+          count = 1
         }
         logger.log('Rooms:', this.rooms)
-        cb(room)
+        // socket.emit('joined', { room, count })
+        // eslint-disable-next-line n/no-callback-literal
+        cb({ room, count })
       })
 
       socket.on('leaveRoom', (room) => {
@@ -74,7 +82,21 @@ class SocketSingleton {
       })
 
       socket.on('disconnect', () => {
+        // list all sockets connected to socket.io server
+
         logger.log('A user disconnected')
+        // Remove the socket id from all rooms it's in
+        this.rooms.forEach((value, key) => {
+          const socketIndex = value.indexOf(socket.id)
+          if (socketIndex > -1) {
+            value.splice(socketIndex, 1)
+            // Remove the room from the map if it's empty
+            if (value.length === 0) {
+              this.rooms.delete(key)
+            }
+          }
+        } // end forEach
+        )
       })
     })
   }

@@ -1,3 +1,5 @@
+// i dont think this file is used for anything right now
+
 const Socket = require('../models/sockets')
 const logger = require('../myLogger')
 // const Chats = require('../models/chatModel')
