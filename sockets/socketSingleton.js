@@ -15,7 +15,8 @@ class SocketSingleton {
           maxAge: 86400
 
         },
-        reconnect: true
+        reconnect: true,
+        timeout: 5000
 
       }
       // list namespaces
@@ -32,27 +33,36 @@ class SocketSingleton {
   initialize () {
     // Set up namespaces and rooms
     this.io.on('connection', (socket) => {
-      logger.log('A user connected')
+      logger.log('A user connected ' + socket.id)
 
-      socket.on('join', (room, cb) => {
+      socket.on('join', (from, room, cb) => {
+        logger.log(`request from ${from} to join room ${room}`)
         let count
         if (!room) return
         socket.join(room)
-        logger.log(`User joined room: ${room}`)
         // Update the rooms map
-        if (this.rooms.has(room) && !this.rooms.get(room).includes(socket.id)) {
+        logger.log(`do we have this room? ${this.rooms.has(room)}}`)
+        logger.log(`is this socket in the rooom? ${socket.id} ${this.rooms.get(room)}`)
+        logger.log(`is this socket in the room already? ${this.rooms.get(room)?.includes(socket.id)}`)
+        const alreadInRoom = this.rooms.get(room)?.includes(socket.id)
+        if (this.rooms.has(room) && !alreadInRoom) {
+          logger.log(`User joined room: ${room}`)
           // If the room exists, add the socket id to the array if it's not already there
           this.rooms.get(room).push(socket.id)
           count = this.rooms.get(room).length
         } else {
           // If the room doesn't exist, create it and add the socket id to the set
+          logger.log(`User created: ${room}`)
           this.rooms.set(room, [socket.id])
           count = 1
         }
         logger.log('Rooms:', this.rooms)
+        // emit to all sockets in room
+        this.io.to(room).emit('joined', { room, count, from })
+
         // socket.emit('joined', { room, count })
         // eslint-disable-next-line n/no-callback-literal
-        cb({ room, count })
+        cb(room, count, from)
       })
 
       socket.on('leaveRoom', (room) => {
@@ -82,10 +92,18 @@ class SocketSingleton {
       })
 
       socket.on('disconnect', () => {
-        // list all sockets connected to socket.io server
+        console.log('user disconnected' + socket.id)
+        // get all connected sockets
+        // const sockets = Object.keys(this.io.sockets.sockets)
+        // logger.log('all socket its remaining', sockets, sockets.length)
+        // // if sockets length is 0, then remove all sockets from all rooms
+        // if (sockets.length === 0) {
+        //   logger.log('no sockets remaining, removing all sockets from all rooms')
+        //   this.rooms.clear()
+        //   logger.log('Rooms:', this.rooms)
+        // }
+        // remove socket from all rooms
 
-        logger.log('A user disconnected')
-        // Remove the socket id from all rooms it's in
         this.rooms.forEach((value, key) => {
           const socketIndex = value.indexOf(socket.id)
           if (socketIndex > -1) {
@@ -95,8 +113,9 @@ class SocketSingleton {
               this.rooms.delete(key)
             }
           }
-        } // end forEach
-        )
+        })
+        logger.log(`remaining sockets minus ${socket.id}`)
+        logger.log('Rooms:', this.rooms)
       })
     })
   }
