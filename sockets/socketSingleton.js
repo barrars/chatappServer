@@ -2,7 +2,6 @@
 
 const { Server } = require('socket.io')
 const logger = require('../myLogger')
-
 class SocketSingleton {
   constructor (server) {
     if (!SocketSingleton.instance) {
@@ -22,6 +21,8 @@ class SocketSingleton {
       // list namespaces
 
       this.io = new Server(server, opts)
+      // use monitorio middleware
+      // this.io.use(monitorio({ port: 8000 }))
       this.rooms = new Map() // Create a Map to store room data
       this.initialize()
       SocketSingleton.instance = this
@@ -33,13 +34,23 @@ class SocketSingleton {
   initialize () {
     // Set up namespaces and rooms
     this.io.on('connection', (socket) => {
+      // logger.log('rooms:')
+      // logger.log(this.io.sockets.adapter.rooms)
+      // logger.log('ids:')
+      // logger.log(this.io.sockets.adapter.sids)
       logger.log('A user connected ' + socket.id)
-
+      logger.log('Rooms:', this.rooms)
+      const allSockets = []
+      for (const [id] of this.io.of('/').sockets) {
+        allSockets.push(id)
+      }
+      logger.log('All sockets:', allSockets)
       socket.on('join', (from, room, cb) => {
         logger.log(`request from ${from} to join room ${room}`)
         let count
         if (!room) return
         socket.join(room)
+        logger.log(` now in rooms: ${socket.rooms}`)
         // Update the rooms map
         logger.log(`do we have this room? ${this.rooms.has(room)}}`)
         logger.log(`is this socket in the rooom? ${socket.id} ${this.rooms.get(room)}`)
@@ -65,21 +76,25 @@ class SocketSingleton {
         cb(room, count, from)
       })
 
-      socket.on('leaveRoom', (room) => {
+      socket.on('leave', (room, cb) => {
         socket.leave(room)
         logger.log(`User left room: ${room}`)
-        if (this._rooms.has(room)) {
-          const socketIndex = this._rooms.get(room).indexOf(socket.id)
+        let count
+        if (this.rooms.has(room)) {
+          const socketIndex = this.rooms.get(room).indexOf(socket.id)
           if (socketIndex > -1) {
-            this._rooms.get(room).splice(socketIndex, 1)
-
+            this.rooms.get(room).splice(socketIndex, 1)
+            count = this.rooms.get(room).length
             // Remove the room from the map if it's empty
-            if (this._rooms.get(room).length === 0) {
-              this._rooms.delete(room)
+            if (this.rooms.get(room).length === 0) {
+              this.rooms.delete(room)
             }
           }
         }
         logger.log('Rooms:', this._rooms)
+        // emit to all sockets in room
+        this.io.to(room).emit('left', { room, count })
+        cb(room)
       })
 
       socket.on('sendMessage', ({ message, username, room }) => {
