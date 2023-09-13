@@ -33,7 +33,7 @@ router.post('/:rooom?', async function (req, res) {
     // broadcast to chatRoom
     const roomList = socketSingleton().rooms
     const sockets = roomList.get(chatRoom)
-    logger.log(sockets)
+    logger.log('sockets in room', sockets)
     // check if chatRoom exists in rooms
     if (!roomList.has(chatRoom)) {
       // join socket to chatRoom

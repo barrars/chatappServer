@@ -1,8 +1,8 @@
 const mongoose = require('mongoose')
 const { Schema } = mongoose
-const uuidv4 = require('uuid').v4
-const fs = require('fs-extra')
-const path = require('path')
+// const uuidv4 = require('uuid').v4
+// const fs = require('fs-extra')
+// const path = require('path')
 // const logger = require('../routes/myLogger')
 // logger.log(new Date())
 
@@ -16,10 +16,13 @@ const roomSchema = new Schema({
     timestamp: { type: Date, default: Date.now },
     chatRoom: { type: String }
   }]
+  // messages: [{ type: Schema.Types.ObjectId, ref: 'chat' }]
 
 })
 
-const Room = module.exports = mongoose.model('rooms', roomSchema)
+// const Room = module.exports = mongoose.model('rooms', roomSchema)
+const Room = mongoose.model('rooms', roomSchema)
+module.exports = Room
 
 // fs.readdir(path.join(__dirname, '../public/downloads'))
 //   .then(files => {

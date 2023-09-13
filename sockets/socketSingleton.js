@@ -2,6 +2,7 @@
 
 const { Server } = require('socket.io')
 const logger = require('../myLogger')
+const Room = require('../models/rooms')
 class SocketSingleton {
   constructor (server) {
     if (!SocketSingleton.instance) {
@@ -32,68 +33,37 @@ class SocketSingleton {
   }
 
   initialize () {
-    // Set up namespaces and rooms
     this.io.on('connection', (socket) => {
-      // logger.log('rooms:')
-      // logger.log(this.io.sockets.adapter.rooms)
-      // logger.log('ids:')
-      // logger.log(this.io.sockets.adapter.sids)
       logger.log('A user connected ' + socket.id)
-      logger.log('Rooms:', this.rooms)
-      const allSockets = []
-      for (const [id] of this.io.of('/').sockets) {
-        allSockets.push(id)
-      }
-      logger.log('All sockets:', allSockets)
-      socket.on('join', (from, room, cb) => {
-        logger.log(`request from ${from} to join room ${room}`)
-        let count
-        if (!room) return
-        socket.join(room)
-        logger.log(` now in rooms: ${socket.rooms}`)
-        // Update the rooms map
-        logger.log(`do we have this room? ${this.rooms.has(room)}}`)
-        logger.log(`is this socket in the rooom? ${socket.id} ${this.rooms.get(room)}`)
-        logger.log(`is this socket in the room already? ${this.rooms.get(room)?.includes(socket.id)}`)
-        const alreadInRoom = this.rooms.get(room)?.includes(socket.id)
-        if (this.rooms.has(room) && !alreadInRoom) {
-          logger.log(`User joined room: ${room}`)
-          // If the room exists, add the socket id to the array if it's not already there
-          this.rooms.get(room).push(socket.id)
-          count = this.rooms.get(room).length
-        } else {
-          // If the room doesn't exist, create it and add the socket id to the set
-          logger.log(`User created: ${room}`)
-          this.rooms.set(room, [socket.id])
-          count = 1
-        }
-        logger.log('Rooms:', this.rooms)
-        // emit to all sockets in room
-        this.io.to(room).emit('joined', { room, count, from })
 
-        // socket.emit('joined', { room, count })
-        // eslint-disable-next-line n/no-callback-literal
-        cb(room, count, from)
+      socket.on('join', async (from, room, cb) => {
+        logger.log(`request from ${from} to join room ${room}`)
+        // await check if room exists and if not create it
+        const roomExists = await Room.exists({ name: room })
+        logger.log('room exists?', roomExists)
+        if (!roomExists) {
+          await Room.create({ name: room, sockets: [socket.id] })
+        }
+        // add socket to sockets array in room
+        await Room.findOneAndUpdate({ name: room }, { $addToSet: { sockets: socket.id } }, { new: true })
+          .then((doc) => {
+            logger.log('doc', doc)
+            // emit to all sockets in room
+            this.io.to(room).emit('joined', { room, count: doc.sockets.length, from: socket.id })
+            cb(room, doc.sockets.length, socket.id)
+          })
       })
 
-      socket.on('leave', (room, cb) => {
-        socket.leave(room)
+      socket.on('leave', async (room, cb) => {
         logger.log(`User left room: ${room}`)
-        let count
-        if (this.rooms.has(room)) {
-          const socketIndex = this.rooms.get(room).indexOf(socket.id)
-          if (socketIndex > -1) {
-            this.rooms.get(room).splice(socketIndex, 1)
-            count = this.rooms.get(room).length
-            // Remove the room from the map if it's empty
-            if (this.rooms.get(room).length === 0) {
-              this.rooms.delete(room)
-            }
-          }
-        }
-        logger.log('Rooms:', this._rooms)
+        // remove socket from sockets array in room
+        await Room.findOneAndUpdate({ name: room }, { $pull: { sockets: socket.id } })
+        // get length of sockets in room and set to count
+        const count = await Room.findOne({ name: room }).then((doc) => doc.sockets.length)
+
         // emit to all sockets in room
         this.io.to(room).emit('left', { room, count })
+        socket.leave(room)
         cb(room)
       })
 
@@ -108,29 +78,21 @@ class SocketSingleton {
 
       socket.on('disconnect', () => {
         console.log('user disconnected' + socket.id)
-        // get all connected sockets
-        // const sockets = Object.keys(this.io.sockets.sockets)
-        // logger.log('all socket its remaining', sockets, sockets.length)
-        // // if sockets length is 0, then remove all sockets from all rooms
-        // if (sockets.length === 0) {
-        //   logger.log('no sockets remaining, removing all sockets from all rooms')
-        //   this.rooms.clear()
-        //   logger.log('Rooms:', this.rooms)
-        // }
-        // remove socket from all rooms
+        // find all Rooms with socket.id in sockets array and remove
+        Room.updateMany({ sockets: socket.id }, { $pull: { sockets: socket.id } })
+          .then((doc) => {
+            logger.log('doc', doc)
+            // emit to all sockets in room
+            // this.io.to(room).emit('left', { room, count: doc.sockets.length, from: socket.id })
+            // cb(room, doc.sockets.length, socket.id)
+          })
 
-        this.rooms.forEach((value, key) => {
-          const socketIndex = value.indexOf(socket.id)
-          if (socketIndex > -1) {
-            value.splice(socketIndex, 1)
-            // Remove the room from the map if it's empty
-            if (value.length === 0) {
-              this.rooms.delete(key)
-            }
-          }
-        })
         logger.log(`remaining sockets minus ${socket.id}`)
         logger.log('Rooms:', this.rooms)
+        // emit to all sockets in this.rooms
+        this.rooms.forEach((value, key) => {
+          this.io.to(key).emit('left', { room: key, count: value.length })
+        })
       })
     })
   }
