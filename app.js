@@ -17,7 +17,7 @@ app.use(logger('dev'))
 app.use(cors(
   {
 
-    // origin: [process.env.FRONTEND_HOST],
+    origin: [process.env.VITE_FRONTEND_HOST],
     credentials: true,
     maxAge: 86400
   }

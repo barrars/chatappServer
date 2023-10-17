@@ -10,8 +10,8 @@ class SocketSingleton {
         .log('Creating a new instance of SocketSingleton')
       const opts = {
         cors: {
-          // origin: [process.env.FRONTEND_HOST, process.env.VITE_FRONTEND_HOST],
-          origin: '*',
+          origin: [process.env.VITE_FRONTEND_HOST],
+          // origin: '*',
           credentials: true,
           maxAge: 86400
 
