@@ -1,0 +1,192 @@
+
+# new droplet setup
+
+ssh root@[ip address]
+adduser scott
+usermod -aG sudo scott
+
+ufw allow OpenSSH
+ufw enable
+ufw status
+
+# copy key assuming its already there
+
+rsync --archive --chown=scott:scott ~/.ssh /home/scott
+
+# install zsh and ohmyzsh
+
+apt install zsh
+
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+
+add (zsh-autosuggestions) in .zshrc plugins
+
+sudo apt update && sudo apt upgrade
+
+sudo apt install ffmpeg
+
+sudo apt install nginx
+sudo ufw allow 'Nginx HTTP'
+systemctl status nginx
+
+# find ip to test nginx
+
+curl -4 icanhazip.com
+
+# http://your_server_ip
+
+# manage nginx
+
+sudo systemctl stop nginx
+sudo systemctl start nginx
+sudo systemctl restart nginx
+sudo systemctl reload nginx
+
+# To re-enable the service to start up at boot, you can type
+
+sudo systemctl enable nginx
+
+# Step 5 – Setting Up Server Blocks (Recommended) **referene** but not done (this is done with nginx.io config)
+
+<https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04>
+
+<!-- nginx.io config -->
+use both root and createdUser accounts
+
+# need certbot
+
+sudo apt-get -y install certbot
+
+# install mongo
+
+curl -fsSL https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
+
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+
+sudo apt update
+
+sudo apt install mongodb-org
+sudo systemctl start mongod.service
+sudo systemctl status mongod
+sudo systemctl enable mongod
+
+# confirm mongo
+
+mongo --eval 'db.runCommand({ connectionStatus: 1 })'
+
+# more mongo info @
+
+<https://www.digitalocean.com/community/tutorials/how-to-install-mongodb-on-ubuntu-20-04>
+
+# create .env
+
+# testing
+
+manually put the mongo connection sting in
+
+# create swap
+
+# We can see if the system has any configured swap by typing
+
+sudo swapon --show
+
+# You can verify that there is no active swap using the free utility
+
+free -h
+
+# Before we create our swap file, we’ll check our current disk usage to make sure we have enough space. Do this by entering
+
+df -h
+
+# will allocate a file of the size that we want called swapfile in our root (/) directory. The best way of creating a swap file is with the fallocate program. This command instantly creates a file of the specified size
+
+sudo fallocate -l 1G /swapfile
+
+# We can verify that the correct amount of space was reserved by typing
+
+ls -lh /swapfile
+
+# enable Make the file only accessible to root by typing
+
+sudo chmod 600 /swapfile
+
+# Verify the permissions change by typing
+
+ls -lh /swapfile
+
+# We can now mark the file as swap space by typing
+
+sudo mkswap /swapfile
+
+# After marking the file, we can enable the swap file, allowing our system to start using it
+
+sudo swapon /swapfile
+
+# Verify that the swap is available by typing
+
+sudo swapon --show
+
+# We can check the output of the free utility again to corroborate our findings
+
+free -h
+
+# Back up the /etc/fstab file in case anything goes wrong
+
+sudo cp /etc/fstab /etc/fstab.bak
+
+# Add the swap file information to the end of your /etc/fstab file by typing
+
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# We can see the current swappiness value by typing
+
+cat /proc/sys/vm/swappiness
+
+# For instance, to set the swappiness to 10, we could type
+
+sudo sysctl vm.swappiness=10
+
+# This setting will persist until the next reboot. We can set this value automatically at restart by adding the line to our /etc/sysctl.conf file
+
+sudo nano /etc/sysctl.conf
+
+# At the bottom, you can add
+
+vm.swappiness=10
+
+# Adjusting the Cache Pressure Setting
+
+cat /proc/sys/vm/vfs_cache_pressure
+
+# As it is currently configured, our system removes inode information from the cache too quickly. We can set this to a more conservative setting like 50 by typing
+
+sudo sysctl vm.vfs_cache_pressure=50
+
+sudo nano /etc/sysctl.conf
+
+# At the bottom, add the line that specifies your new value
+
+vm.vfs_cache_pressure=50
+
+
+# install nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+
+nvm install node # "node" is an alias for the latest version
+
+# increase heap
+
+  export NODE_OPTIONS=--max_old_space_size=4096
+
+  #increase npm timeout
+  npm config set fetch-retry-maxtimeout 1200000 # sets the timeout to 20 minutes
+
+
+# install pm2
+npm install pm2 -g
+pm2 completion install
+# keep up to date
+npm install pm2 -g && pm2 update

@@ -14,7 +14,14 @@ const socketSingleton = require('./sockets/socketSingleton.js')
 const app = express()
 
 app.use(logger('dev'))
-app.use(cors())
+app.use(cors(
+  {
+
+    // origin: [process.env.FRONTEND_HOST],
+    credentials: true,
+    maxAge: 86400
+  }
+))
 // app.use(function (req, res, next) {
 // res.io = io
 // next()

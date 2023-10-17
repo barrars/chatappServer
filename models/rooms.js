@@ -21,8 +21,8 @@ const roomSchema = new Schema({
 })
 
 // const Room = module.exports = mongoose.model('rooms', roomSchema)
-const Room = mongoose.model('rooms', roomSchema)
-module.exports = Room
+const Rooms = mongoose.model('rooms', roomSchema)
+module.exports = Rooms
 
 // fs.readdir(path.join(__dirname, '../public/downloads'))
 //   .then(files => {
