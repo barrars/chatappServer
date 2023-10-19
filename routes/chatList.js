@@ -29,8 +29,9 @@ router.post('/:rooom?', async function (req, res) {
   chat.chatRoom = chatRoom || 'default'
   logger.log(chat, chatRoom)
   const newChat = new Chat(chat)
-  socketSingleton().io.to(`${chatRoom}`).emit('chat message', chat)
-  if (newChat.save()) {
+  // socketSingleton().io.to(`${chatRoom}`).emit('chat message', chat)
+  try {
+    await newChat.save()
     // mongo aggregation to get all sockets in chatRoom
     const sockets = await Rooms.aggregate([
       { $match: { name: chatRoom } },
@@ -63,7 +64,7 @@ router.post('/:rooom?', async function (req, res) {
     // socketSingleton().io.to(`${chatRoom}`).emit('chat message', { newChat, chatRoom })
     // socketSingleton().io.to(`/${chatRoom}`).emit('chat message', newChat)
     // socketSingleton().io.emit('chat message', { newChat, chatRoom })
-  } else {
+  } catch (err) {
     res.json({ err: 'something isnt right' })
   }
 })
