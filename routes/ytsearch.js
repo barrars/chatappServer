@@ -73,7 +73,7 @@ router.post('/', function (req, res, next) {
           socketSingleton().io.emit('song', { song })
         })
 
-      res.send({ title: songTitle })
+      res.json({ title: songTitle })
     })
 
   // this gets the song title from the file name
