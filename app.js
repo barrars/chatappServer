@@ -12,7 +12,8 @@ const usersRouter = require('./routes/users')
 const cors = require('cors')
 const socketSingleton = require('./sockets/socketSingleton.js')
 const app = express()
-
+console.log('process.env.VITE_FRONTEND_HOST')
+console.log(process.env.VITE_FRONTEND_HOST)
 app.use(logger('dev'))
 app.use(cors(
   {
