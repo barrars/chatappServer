@@ -18,6 +18,7 @@ app.use(cors(
   {
 
     origin: [process.env.VITE_FRONTEND_HOST],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH', 'CONNECT', 'TRACE', 'SEARCH'],
     credentials: true,
     maxAge: 86400
   }
