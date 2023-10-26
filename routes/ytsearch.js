@@ -14,6 +14,11 @@ const logger = require('../myLogger')
 let newSong
 const songsBeingDownloaded = []
 
+ytDlpWrap.getVersion()
+  .then((version) => {
+    logger.log('ytDlpWrap version is ' + version)
+  })
+
 const watcher = chokidar.watch(path.join(__dirname, '../public/downloads'), {
   ignored: /(^|[\/\\])\../, // ignore dotfiles
   persistent: true
@@ -30,6 +35,8 @@ router.post('/test', function (req, res, next) {
 router.post('/', function (req, res, next) {
   const str = req.query.q
   const { socket, username } = req.body
+  logger.log('##################################')
+  logger.log(socket, str)
   let songTitle
   let status
   ytDlpWrap
@@ -54,26 +61,37 @@ router.post('/', function (req, res, next) {
         progress.percent
       )
     })
+    // .on('ytDlpEvent', (info) => {
+    //   logger.log('info event')
+    //   logger.log(info)
+    //   // status = 'downloading'
+    //   // socketSingleton().io.emit('info', info)
+    // })
     .on('error', (error) => {
       logger.log('error!!!!!!!!!!!!!!!')
       logger.error(error)
       res.send(error)
     })
-    .on('close', async (e) => {
+    .on('close', (e) => {
       logger.log('close event ' + e)
       logger.log(songTitle + ' is finnished downloaded by ' + username)
       logger.log('close status = ', status)
       status = status || 'downloaded'
       // songTitle comes from file watcher
-      Song.create({ createdBy: username, title: songTitle, fileName: songTitle, downloaded: Date.now() })
-        .then(song => {
-          logger.log(song)
-          // newSong = song
-          songsBeingDownloaded.shift()
-          socketSingleton().io.emit('song', { song })
-        })
+      if (songTitle) {
+        Song.create({ createdBy: username, title: songTitle, fileName: songTitle, downloaded: Date.now() })
+          .then(song => {
+            logger.log(song)
+            // newSong = song
+            songsBeingDownloaded.shift()
+            socketSingleton().io.emit('song', { song })
+          })
 
-      res.json({ title: songTitle })
+        // res.json({ title: songTitle })
+        res.send({ title: songTitle })
+      } else {
+        res.send({ title: 'no songTitle' })
+      }
     })
 
   // this gets the song title from the file name

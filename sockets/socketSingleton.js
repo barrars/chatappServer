@@ -3,6 +3,7 @@
 const { Server } = require('socket.io')
 const logger = require('../myLogger')
 const Room = require('../models/rooms')
+const Rooms = require('../models/rooms')
 class SocketSingleton {
   constructor (server) {
     if (!SocketSingleton.instance) {
@@ -37,6 +38,46 @@ class SocketSingleton {
     this.io.on('connection', (socket) => {
       logger.log('A user connected ' + socket.id)
 
+      // make a function called connectionTest to check all sockets in all Rooms and see if the socket is actually connected to the server
+      async function connectionTest () {
+        logger.log('connectionTest')
+        // first aggregate all sockets in all Rooms into an array of unique sockets
+        const allSockets = await Rooms.aggregate([
+          { $unwind: '$sockets' },
+          { $group: { _id: '$sockets' } },
+          { $project: { _id: 0, sockets: '$_id' } }
+        ])
+
+        logger.log('allSockets', allSockets)
+        // get all Rooms
+        allSockets.forEach(socket => {
+          logger.log('socket', socket)
+          const id = socket.sockets
+          if (!this.io.sockets.sockets.get(id)) {
+            //   // if not connected remove from sockets array
+            logger.log('socket not connected')
+            Rooms.find({ sockets: id })
+              .then(rooms => {
+                Rooms.updateMany({ sockets: id }, { $pull: { sockets: id } })
+                  .then((doc) => {
+                    logger.log('doc', doc)
+                    rooms.forEach(room => {
+                      logger.log('room', room)
+                      // emit to all sockets in room
+                      // this.io.to(room).emit('left', { room, count: doc.sockets.length, from: socket.id })
+                      // cb(room, doc.sockets.length, socket.id)
+                    })
+                    // .catch(err => logger.log(err))
+                  })
+                  // .catch(err => logger.log(err))
+              }
+              )
+              // .catch(err => logger.log(err))
+          }
+        })
+      }
+      connectionTest.bind(this)()
+
       socket.on('join', async (from, room, cb) => {
         logger.log(`request from ${from} to join room ${room}`)
         // await check if room exists and if not create it
@@ -49,9 +90,12 @@ class SocketSingleton {
         await Room.findOneAndUpdate({ name: room }, { $addToSet: { sockets: socket.id } }, { new: true })
           .then((doc) => {
             logger.log('doc', doc)
-            // emit to all sockets in room
-            this.io.to(room).emit('joined', { room, count: doc.sockets.length, from: socket.id })
-            cb(room, doc.sockets.length, socket.id)
+            socket.join(room)
+            // emit to all sockets connected to server
+            // this.io.emit('joined', { room, count: doc.sockets.length, from: socket.id })
+
+            this.io.to('main').emit('joined', { room, count: doc.sockets.length, from: socket.id })
+            // cb(room, doc.sockets.length, socket.id)
           })
       })
 
