@@ -19,6 +19,7 @@
     "socket.io": "^4.5.2",
     "tracer": "^1.1.6",
     "uuid": "^9.0.0",
+    "yt-dlp-wrap": "^2.3.12",
     "yt-dlp-wrap-extended": "^2.3.15"
   },
   "devDependencies": {

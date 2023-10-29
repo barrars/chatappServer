@@ -5,7 +5,8 @@
 const app = require('../app')
 const debug = require('debug')('chatappserver:server')
 const { createServer } = require('http')
-const { default: YTDlpWrap } = require('yt-dlp-wrap-extended')
+// const { default: YTDlpWrap } = require('yt-dlp-wrap-extended')
+const YTDlpWrap = require('yt-dlp-wrap').default
 // const { Server } = require('socket.io')
 // const { onConnect } = require('../sockets/socketAPI')
 const socketSingleton = require('../sockets/socketSingleton')
@@ -14,7 +15,7 @@ const logger = require('../myLogger')
 // import watcher
 const port = normalizePort(process.env.PORT || '3001')
 app.set('port', port)
-YTDlpWrap.downloadFromGithub()
+
 const server = createServer(app)
 // const corsOptions = {
 //   origin: [process.env.FRONTEND_HOST],

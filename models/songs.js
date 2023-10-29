@@ -17,7 +17,9 @@ const songSchema = new Schema({
   createdBy: { type: String, required: true, default: 'rambo' },
   lastPlayed: { type: Date, default: Date.now },
   downloaded: { type: Date, default: Date.now },
-  deleted: { type: Boolean, default: false }
+  deleted: { type: Boolean, default: false },
+  tags: { type: Array },
+  ytID: { type: String }
 
 })
 

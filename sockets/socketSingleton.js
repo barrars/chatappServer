@@ -91,11 +91,12 @@ class SocketSingleton {
           .then((doc) => {
             logger.log('doc', doc)
             socket.join(room)
-            // emit to all sockets connected to server
-            // this.io.emit('joined', { room, count: doc.sockets.length, from: socket.id })
+            // brodacast to the other sockets in the room that you've joined to update their counts
 
-            this.io.to('main').emit('joined', { room, count: doc.sockets.length, from: socket.id })
-            // cb(room, doc.sockets.length, socket.id)
+            this.io.to(room).emit('joined', { room, count: doc.sockets.length, from: socket.id })
+
+            // you're own emitted join event callback will update your local storage
+            cb(room, doc.sockets.length, socket.id)
           })
       })
 
