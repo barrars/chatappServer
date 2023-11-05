@@ -28,11 +28,7 @@ pac
 .vscode/settings.json
 youtube-dl
 yt-dlp
-Person.js
-archive.txt
-archive.txt
-./archive.txt
 
-# ignore archive.txt
+devnotes.txt
+
 archive.txt
-```

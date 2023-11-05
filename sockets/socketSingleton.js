@@ -49,6 +49,10 @@ class SocketSingleton {
         ])
 
         logger.log('allSockets', allSockets)
+        const disconnectedSockets = allSockets
+          .filter(socket => !this.io.sockets.sockets.get(socket.sockets))
+          .map(socket => socket.sockets)
+        logger.log('disconnectedSockets', disconnectedSockets)
         // get all Rooms
         allSockets.forEach(socket => {
           logger.log('socket', socket)
@@ -101,16 +105,35 @@ class SocketSingleton {
       })
 
       socket.on('leave', async (room, cb) => {
-        logger.log(`User left room: ${room}`)
-        // remove socket from sockets array in room
-        await Room.findOneAndUpdate({ name: room }, { $pull: { sockets: socket.id } })
-        // get length of sockets in room and set to count
-        const count = await Room.findOne({ name: room }).then((doc) => doc.sockets.length)
+        try {
+          logger.log(`User left room: ${room}`)
 
-        // emit to all sockets in room
-        this.io.to(room).emit('left', { room, count })
-        socket.leave(room)
-        cb(room)
+          // Remove socket from sockets array in room and get the updated room document
+          const updatedRoom = await Room.findOneAndUpdate(
+            { name: room },
+            { $pull: { sockets: socket.id } },
+            { new: true } // This option returns the modified document
+          )
+
+          // Check if the room exists and get the count from the updated room document
+          if (!updatedRoom) {
+            throw new Error(`Room ${room} not found`)
+          }
+          const count = updatedRoom.sockets.length
+
+          // Make the socket leave the room
+          socket.leave(room)
+
+          // Broadcast to all sockets in the room
+          this.io.to(room).emit('left', { room, count })
+
+          // If you have a callback, execute it
+          cb(room)
+        } catch (error) {
+          logger.error(`Error handling 'leave' event for room ${room}:`, error)
+          // Handle or report the error appropriately
+          cb(new Error(`Failed to leave room ${room}`))
+        }
       })
 
       socket.on('sendMessage', ({ message, username, room }) => {
