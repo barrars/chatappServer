@@ -4,29 +4,14 @@ const { Server } = require('socket.io')
 const logger = require('../myLogger')
 const Room = require('../models/rooms')
 const Rooms = require('../models/rooms')
+const { handlejoin } = require('./socketEventHandlers')
 class SocketSingleton {
   constructor (server) {
-    if (!SocketSingleton.instance) {
+    if (!SocketSingleton.instance && server) {
       logger
         .log('Creating a new instance of SocketSingleton')
-      const opts = {
-        cors: {
-          origin: [process.env.VITE_FRONTEND_HOST],
-          // origin: '*',
-          credentials: true,
-          maxAge: 86400
-
-        },
-        reconnect: true,
-        timeout: 5000
-
-      }
-      // list namespaces
-
-      this.io = new Server(server, opts)
-      // use monitorio middleware
-      // this.io.use(monitorio({ port: 8000 }))
-      this.rooms = new Map() // Create a Map to store room data
+      this.initializeServer(server)
+      this.rooms = new Map()
       this.initialize()
       SocketSingleton.instance = this
     }
@@ -34,7 +19,23 @@ class SocketSingleton {
     return SocketSingleton.instance
   }
 
-  initialize () {
+  initializeServer (server) {
+    const opts = {
+      cors: {
+        origin: [process.env.VITE_FRONTEND_HOST],
+        // origin: '*',
+        credentials: true,
+        maxAge: 86400
+      },
+      reconnect: true,
+      timeout: 5000
+    }
+    this.io = new Server(server, opts)
+    this.rooms = new Map()
+    this.registerListeners()
+  }
+
+  registerListeners () {
     this.io.on('connection', (socket) => {
       logger.log('A user connected ' + socket.id)
 
@@ -55,8 +56,9 @@ class SocketSingleton {
         logger.log('disconnectedSockets', disconnectedSockets)
         // get all Rooms
         allSockets.forEach(socket => {
-          logger.log('socket', socket)
           const id = socket.sockets
+          logger.log('socket', socket)
+          // logger.log(this.io.sockets.sockets.get(id))
           if (!this.io.sockets.sockets.get(id)) {
             //   // if not connected remove from sockets array
             logger.log('socket not connected')
@@ -68,7 +70,7 @@ class SocketSingleton {
                     rooms.forEach(room => {
                       logger.log('room', room)
                       // emit to all sockets in room
-                      // this.io.to(room).emit('left', { room, count: doc.sockets.length, from: socket.id })
+                      this.io.to(room).emit('left', { room, count: doc.sockets.length, from: socket.id })
                       // cb(room, doc.sockets.length, socket.id)
                     })
                     // .catch(err => logger.log(err))
@@ -82,27 +84,7 @@ class SocketSingleton {
       }
       connectionTest.bind(this)()
 
-      socket.on('join', async (from, room, cb) => {
-        logger.log(`request from ${from} to join room ${room}`)
-        // await check if room exists and if not create it
-        const roomExists = await Room.exists({ name: room })
-        logger.log('room exists?', roomExists)
-        if (!roomExists) {
-          await Room.create({ name: room, sockets: [socket.id] })
-        }
-        // add socket to sockets array in room
-        await Room.findOneAndUpdate({ name: room }, { $addToSet: { sockets: socket.id } }, { new: true })
-          .then((doc) => {
-            logger.log('doc', doc)
-            socket.join(room)
-            // brodacast to the other sockets in the room that you've joined to update their counts
-
-            this.io.to(room).emit('joined', { room, count: doc.sockets.length, from: socket.id })
-
-            // you're own emitted join event callback will update your local storage
-            cb(room, doc.sockets.length, socket.id)
-          })
-      })
+      socket.on('join', handlejoin.bind(null, socket, this.io))
 
       socket.on('leave', async (room, cb) => {
         try {
@@ -145,10 +127,10 @@ class SocketSingleton {
         this.io.to(room).emit('receiveMessage', message)
       })
 
-      socket.on('disconnect', () => {
-        console.log('user disconnected' + socket.id)
+      socket.on('disconnect', (cb) => {
+        logger.log('user disconnected' + socket.id)
         // find all Rooms with socket.id in sockets array and remove
-        Room.updateMany({ sockets: socket.id }, { $pull: { sockets: socket.id } })
+        Room.updateMany({ sockets: socket.id }, { $pull: { sockets: socket.id } }, { new: true })
           .then((doc) => {
             logger.log('doc', doc)
             // emit to all sockets in room
@@ -167,4 +149,11 @@ class SocketSingleton {
   }
 }
 
-module.exports = (server) => new SocketSingleton(server)
+const instance = new SocketSingleton()
+
+module.exports = {
+  getInstance: () => instance,
+  initialize: (server) => instance.initializeServer(server)
+}
+
+// module.exports = (server) => new SocketSingleton(server)

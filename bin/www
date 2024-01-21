@@ -5,13 +5,10 @@
 const app = require('../app')
 const debug = require('debug')('chatappserver:server')
 const { createServer } = require('http')
-// const { default: YTDlpWrap } = require('yt-dlp-wrap-extended')
-const YTDlpWrap = require('yt-dlp-wrap').default
 // const { Server } = require('socket.io')
 // const { onConnect } = require('../sockets/socketAPI')
-const socketSingleton = require('../sockets/socketSingleton')
+const { initialize } = require('../sockets/socketSingleton')
 const logger = require('../myLogger')
-
 // import watcher
 const port = normalizePort(process.env.PORT || '3001')
 app.set('port', port)
@@ -28,8 +25,8 @@ const server = createServer(app)
 // io.on('connect', socket => {
 //   onConnect(io, socket)
 // })
-
-socketSingleton(server)
+initialize(server)
+// socketSingleton(server)
 server.listen(port)
 server.on('error', onError)
 server.on('listening', onListening)

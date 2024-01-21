@@ -12,19 +12,16 @@ const express = require('express')
 // const fs = require('fs-extra')
 const Song = require('../models/songs')
 const router = express.Router()
-const socketSingleton = require('../sockets/socketSingleton')
+const { getInstance } = require('../sockets/socketSingleton')
 const logger = require('../myLogger')
-const { log } = require('console')
-// const { log } = require('console')
-// let newSong
-// const songsBeingDownloaded = []
-
+const socketInstance = getInstance()
 const slug = () => {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
   let result = ''
   for (let i = 8; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)]
   return result + '.mp3'
-}// ytDlpWrap.getVersion()
+}
+// ytDlpWrap.getVersion()
 //   .then((version) => {
 //     logger.log('ytDlpWrap version is ' + version)
 //   })
@@ -63,6 +60,7 @@ router.post('/', async function (req, res, next) {
   const ytID = jsonData.id
   logger.log(tags)
   logger.log(jsonData.title)
+
   // emit song title to socketID
   socketSingleton().io.to(`${socketID}`).emit('downloadingSongTitle', songTitle)
   // create a slug length of 8 using alpha and numbers function
