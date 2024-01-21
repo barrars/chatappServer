@@ -12,9 +12,8 @@ const express = require('express')
 // const fs = require('fs-extra')
 const Song = require('../models/songs')
 const router = express.Router()
-const { getInstance } = require('../sockets/socketSingleton')
+const socketInstance = require('../sockets/socketSingleton').getInstance()
 const logger = require('../myLogger')
-const socketInstance = getInstance()
 const slug = () => {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
   let result = ''
@@ -62,7 +61,7 @@ router.post('/', async function (req, res, next) {
   logger.log(jsonData.title)
 
   // emit song title to socketID
-  socketSingleton().io.to(`${socketID}`).emit('downloadingSongTitle', songTitle)
+  socketInstance.io.to(`${socketID}`).emit('downloadingSongTitle', songTitle)
   // create a slug length of 8 using alpha and numbers function
 
   // 2. Download the song using the extracted title
@@ -77,7 +76,7 @@ router.post('/', async function (req, res, next) {
       `${audioDir}${songSlug}`
   ])
   downloadProcess.on('progress', (progress) => {
-    socketSingleton().io.emit('eta', progress)
+    socketInstance.io.emit('eta', progress)
     logger.log(progress.percent)
   })
   downloadProcess.on('error', (error) => {
@@ -93,7 +92,7 @@ router.post('/', async function (req, res, next) {
       Song.create({ ytID, tags, createdBy: username, title: songTitle, fileName: songSlug, downloaded: Date.now() })
         .then(song => {
           logger.log(song)
-          socketSingleton().io.emit('song', { song })
+          socketInstance.io.emit('song', { song })
           res.send({ title: songTitle })
         })
     } else {

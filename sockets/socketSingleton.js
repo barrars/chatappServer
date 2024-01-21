@@ -70,7 +70,7 @@ class SocketSingleton {
                     rooms.forEach(room => {
                       logger.log('room', room)
                       // emit to all sockets in room
-                      this.io.to(room).emit('left', { room, count: doc.sockets.length, from: socket.id })
+                      this.io.to(room).emit('left', { room, count: room.sockets.length, from: socket.id })
                       // cb(room, doc.sockets.length, socket.id)
                     })
                     // .catch(err => logger.log(err))
